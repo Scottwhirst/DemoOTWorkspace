@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenText Workspace - Meridian Industries</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-size: 14px;
+            color: #333;
+            background: #fff;
+            overflow-x: hidden;
+        }
+
+        /* Header / Toolbar */
+        .toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 16px;
+            border-bottom: 1px solid #e0e0e0;
+            background: #fff;
+            height: 48px;
+        }
+
+        .toolbar-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .toolbar-center {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            cursor: pointer;
+        }
+
+        .toolbar-center .folder-icon {
+            width: 22px;
+            height: 22px;
+        }
+
+        .toolbar-center .title {
+            font-size: 16px;
+            font-weight: 400;
+            color: #333;
+        }
+
+        .toolbar-center .dropdown-arrow {
+            font-size: 10px;
+            color: #666;
+            margin-left: 4px;
+        }
+
+        .toolbar-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .toolbar-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #666;
+            font-size: 18px;
+            padding: 4px;
+            display: flex;
+            align-items: center;
+            position: relative;
+        }
+
+        .toolbar-btn:hover {
+            color: #333;
+        }
+
+        .toolbar-btn .badge {
+            position: absolute;
+            top: -2px;
+            right: -6px;
+            background: none;
+            color: #666;
+            font-size: 11px;
+            font-weight: normal;
+        }
+
+        /* Column Header */
+        .column-header {
+            display: grid;
+            grid-template-columns: 40px 60px 1fr 80px 180px 40px 40px;
+            align-items: center;
+            padding: 8px 16px;
+            background: #f5f5f5;
+            border-bottom: 1px solid #e0e0e0;
+            font-size: 13px;
+            color: #666;
+            font-weight: 500;
+        }
+
+        .column-header .col-name {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .column-header .col-name .sort-icon {
+            font-size: 11px;
+        }
+
+        .column-header .col-name .search-icon {
+            font-size: 13px;
+            cursor: pointer;
+            color: #999;
+        }
+
+        /* File/Folder Rows */
+        .file-list {
+            list-style: none;
+        }
+
+        .file-row {
+            display: grid;
+            grid-template-columns: 40px 60px 1fr 80px 180px 40px 40px;
+            align-items: center;
+            padding: 10px 16px;
+            border-bottom: 1px solid #f0f0f0;
+            cursor: pointer;
+            transition: background 0.1s;
+        }
+
+        .file-row:hover {
+            background: #f8f8f8;
+        }
+
+        .file-row .checkbox {
+            width: 16px;
+            height: 16px;
+            border: 1.5px solid #ccc;
+            border-radius: 2px;
+            cursor: pointer;
+        }
+
+        .file-row .type-icon {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .file-row .file-name {
+            color: #333;
+            font-size: 14px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            padding-right: 10px;
+        }
+
+        .file-row .file-name:hover {
+            text-decoration: underline;
+            color: #0070d2;
+        }
+
+        .file-row .size {
+            text-align: right;
+            color: #666;
+            font-size: 13px;
+        }
+
+        .file-row .modified {
+            color: #666;
+            font-size: 13px;
+        }
+
+        .file-row .comment-icon {
+            color: #999;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 2px;
+        }
+
+        .file-row .comment-icon:hover {
+            color: #333;
+        }
+
+        .file-row .favorite-icon {
+            color: #ccc;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .file-row .favorite-icon:hover {
+            color: #f5a623;
+        }
+
+        /* Footer */
+        .footer {
+            padding: 8px 16px;
+            background: #f5f5f5;
+            border-top: 1px solid #e0e0e0;
+            font-size: 13px;
+            color: #666;
+        }
+
+        /* Folder Icons */
+        .icon-folder {
+            width: 32px;
+            height: 26px;
+            position: relative;
+        }
+
+        .icon-folder-orange svg {
+            fill: #e8a027;
+        }
+
+        .icon-folder-purple svg {
+            fill: #7b5ea7;
+        }
+
+        /* File type icons */
+        .icon-pdf {
+            color: #d32f2f;
+        }
+
+        .icon-email {
+            color: #7b5ea7;
+        }
+
+        .icon-excel {
+            color: #217346;
+        }
+
+        /* Comments Panel */
+        .comments-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 100;
+        }
+
+        .comments-panel {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 420px;
+            max-height: 400px;
+            background: #fff;
+            border: 2px solid #333;
+            box-shadow: 4px 4px 0 rgba(0,0,0,0.15);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .comments-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px 12px;
+        }
+
+        .comments-header h3 {
+            font-size: 20px;
+            font-weight: 400;
+            color: #333;
+        }
+
+        .comments-close {
+            background: none;
+            border: none;
+            font-size: 22px;
+            cursor: pointer;
+            color: #333;
+            padding: 4px;
+        }
+
+        .comments-input-area {
+            display: flex;
+            align-items: center;
+            padding: 8px 20px;
+            gap: 10px;
+        }
+
+        .comments-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: #e0e0e0;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .comments-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .comments-input-wrapper {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            border: 2px solid #e67e22;
+            border-radius: 3px;
+            padding: 6px 10px;
+            gap: 6px;
+        }
+
+        .comments-input-wrapper input {
+            flex: 1;
+            border: none;
+            outline: none;
+            font-size: 14px;
+        }
+
+        .comments-input-wrapper .input-icons {
+            display: flex;
+            gap: 6px;
+            color: #999;
+            font-size: 16px;
+        }
+
+        .comments-post-btn {
+            background: #ccc;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 3px;
+            color: #fff;
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        .comments-body {
+            padding: 16px 20px;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .comment-item {
+            display: flex;
+            gap: 10px;
+        }
+
+        .comment-item .comment-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #8d6e63;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .comment-content {
+            flex: 1;
+        }
+
+        .comment-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 4px;
+        }
+
+        .comment-author {
+            font-weight: 600;
+            font-size: 13px;
+            color: #333;
+        }
+
+        .comment-time {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .comment-actions-icons {
+            margin-left: auto;
+            display: flex;
+            gap: 8px;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .comment-text {
+            font-size: 14px;
+            color: #333;
+            margin-bottom: 6px;
+        }
+
+        .comment-links {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .comment-links a {
+            color: #666;
+            text-decoration: none;
+        }
+
+        .comment-links a:hover {
+            text-decoration: underline;
+        }
+
+        /* SVG Icons inline */
+        .svg-icon {
+            display: inline-flex;
+            align-items: center;
+        }
+
+        /* Breadcrumb back button */
+        .back-btn {
+            display: none;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+            color: #666;
+            padding: 4px;
+        }
+
+        .back-btn:hover {
+            color: #333;
+        }
+
+        .back-btn.visible {
+            display: flex;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Toolbar -->
+<div class="toolbar">
+    <div class="toolbar-left">
+        <button class="toolbar-btn" title="Filter">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+            </svg>
+        </button>
+        <button class="toolbar-btn" title="Add">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+        </button>
+        <button class="toolbar-btn back-btn" id="backBtn" title="Back" onclick="navigateBack()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="15 18 9 12 15 6"/>
+            </svg>
+        </button>
+    </div>
+    <div class="toolbar-center" id="toolbarCenter">
+        <svg class="folder-icon" width="22" height="22" viewBox="0 0 32 26">
+            <path d="M2 4h10l2-2h14a2 2 0 012 2v18a2 2 0 01-2 2H2a2 2 0 01-2-2V4z" fill="#e8a027"/>
+        </svg>
+        <span class="title" id="pageTitle">Meridian Industries (50031)</span>
+        <span class="dropdown-arrow">&#9662;</span>
+    </div>
+    <div class="toolbar-right">
+        <button class="toolbar-btn" title="Comments" onclick="openComments('main')">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+            </svg>
+            <span class="badge" id="mainCommentBadge">1</span>
+        </button>
+        <button class="toolbar-btn" title="Favorites">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+            </svg>
+        </button>
+        <button class="toolbar-btn" title="Search">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+        </button>
+        <button class="toolbar-btn" title="Expand">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/>
+            </svg>
+        </button>
+    </div>
+</div>
+
+<!-- Column Header -->
+<div class="column-header">
+    <div><input type="checkbox" style="width:14px;height:14px;cursor:pointer;"></div>
+    <div>Type</div>
+    <div class="col-name">Name <span class="sort-icon">&#8593;</span> <span class="search-icon">&#128269;</span></div>
+    <div style="text-align:right;">Size</div>
+    <div>Modified</div>
+    <div></div>
+    <div></div>
+</div>
+
+<!-- File List -->
+<ul class="file-list" id="fileList">
+</ul>
+
+<!-- Footer -->
+<div class="footer" id="footer" style="display:none;"></div>
+
+<!-- Comments Panel Overlay -->
+<div class="comments-overlay" id="commentsOverlay" onclick="closeComments(event)">
+    <div class="comments-panel" onclick="event.stopPropagation()">
+        <div class="comments-header">
+            <h3>Comments</h3>
+            <button class="comments-close" onclick="closeCommentsPanel()">&times;</button>
+        </div>
+        <div class="comments-input-area">
+            <div class="comments-avatar">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="#999">
+                    <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-7 8-7s8 3 8 7"/>
+                </svg>
+            </div>
+            <div class="comments-input-wrapper">
+                <input type="text" placeholder="" id="commentInput">
+                <div class="input-icons">
+                    <span style="cursor:pointer;">&#128206;</span>
+                    <span style="cursor:pointer;">&#128578;</span>
+                </div>
+            </div>
+            <button class="comments-post-btn" onclick="postComment()">Post</button>
+        </div>
+        <div class="comments-body" id="commentsBody">
+        </div>
+    </div>
+</div>
+
+<script>
+    // Data structure
+    const workspaceData = {
+        root: {
+            title: "Meridian Industries (50031)",
+            icon: "folder-workspace",
+            items: [
+                { name: "00 - Order Initiation", type: "folder-orange", size: "3 Items", modified: "02/15/2019 5:04 AM", comments: 0, favorite: false, folderId: "order-initiation" },
+                { name: "01 - Account Management", type: "folder-orange", size: "33 Items", modified: "02/13/2019 2:34 PM", comments: 1, favorite: false, folderId: "account-management" },
+                { name: "02 - Meetings", type: "folder-orange", size: "59 Items", modified: "02/13/2019 3:43 PM", comments: 0, favorite: false, folderId: "meetings" },
+                { name: "03 - Correspondence", type: "folder-purple", size: "68 Items", modified: "02/13/2019 12:14 PM", comments: 0, favorite: false, folderId: "correspondence" },
+                { name: "04 - Onsite Reports", type: "folder-orange", size: "39 Items", modified: "06/20/2018 1:34 PM", comments: 0, favorite: false, folderId: "onsite-reports" },
+                { name: "05 - Opportunities", type: "folder-purple", size: "4 Items", modified: "06/20/2018 1:34 PM", comments: 0, favorite: false, folderId: "opportunities" },
+                { name: "06 - Sales Quotations", type: "folder-purple", size: "9 Items", modified: "06/20/2018 1:34 PM", comments: 0, favorite: false, folderId: "sales-quotations" },
+                { name: "07 - Sales Contracts", type: "folder-purple", size: "13 Items", modified: "06/20/2018 1:34 PM", comments: 0, favorite: false, folderId: "sales-contracts" },
+                { name: "08 - Sales Orders", type: "folder-purple", size: "123 Items", modified: "06/20/2018 1:34 PM", comments: 0, favorite: false, folderId: "sales-orders" },
+                { name: "09 - Deliveries", type: "folder-purple", size: "32 Items", modified: "06/20/2018 1:34 PM", comments: 0, favorite: false, folderId: "deliveries" },
+                { name: "10 - Support Cases", type: "folder-orange", size: "2 Items", modified: "06/20/2018 1:34 PM", comments: 0, favorite: false, folderId: "support-cases" },
+                { name: "11 - Invoices", type: "folder-orange", size: "2 Items", modified: "02/12/2019 8:48 AM", comments: 1, favorite: false, folderId: "invoices" },
+                { name: "12 - Equipment / Assets", type: "folder-purple", size: "0 Items", modified: "06/20/2018 1:34 PM", comments: 0, favorite: false, folderId: "equipment" }
+            ]
+        },
+        "order-initiation": {
+            title: "00 - Order Initiation",
+            icon: "folder-orange",
+            items: [
+                { name: "!AIIB - SCE1 - Rail Equipment Maintenance Specifications.pdf", type: "pdf", size: "148 KB", modified: "02/15/2019 5:03 AM", comments: 1, favorite: false },
+                { name: "Customer Meridian Industries - Order confirmed, needs to ship Friday!.eml", type: "email", size: "23 KB", modified: "02/15/2019 5:02 AM", comments: 0, favorite: false },
+                { name: "Order Meridian Industries_DE.xlsm", type: "excel", size: "65 KB", modified: "02/15/2019 5:04 AM", comments: 1, favorite: false }
+            ]
+        },
+        "account-management": {
+            title: "01 - Account Management",
+            icon: "folder-orange",
+            items: [
+                { name: "Account Overview - Meridian Industries.pdf", type: "pdf", size: "234 KB", modified: "02/13/2019 2:30 PM", comments: 0, favorite: false },
+                { name: "Contact List Q1 2019.xlsx", type: "excel", size: "45 KB", modified: "02/13/2019 2:34 PM", comments: 0, favorite: false },
+                { name: "Annual Review Notes.docx", type: "word", size: "89 KB", modified: "01/15/2019 10:20 AM", comments: 1, favorite: false }
+            ]
+        },
+        "meetings": {
+            title: "02 - Meetings",
+            icon: "folder-orange",
+            items: [
+                { name: "Kickoff Meeting Minutes 2019-01-10.pdf", type: "pdf", size: "112 KB", modified: "01/10/2019 4:30 PM", comments: 0, favorite: false },
+                { name: "Quarterly Business Review Q4.pptx", type: "pptx", size: "2.4 MB", modified: "02/13/2019 3:43 PM", comments: 1, favorite: false },
+                { name: "Site Visit Agenda.docx", type: "word", size: "56 KB", modified: "02/01/2019 9:15 AM", comments: 0, favorite: false }
+            ]
+        },
+        "correspondence": {
+            title: "03 - Correspondence",
+            icon: "folder-purple",
+            items: [
+                { name: "RE: Contract Renewal Discussion.eml", type: "email", size: "18 KB", modified: "02/13/2019 12:14 PM", comments: 0, favorite: false },
+                { name: "FW: Updated Pricing Schedule.eml", type: "email", size: "32 KB", modified: "02/10/2019 8:45 AM", comments: 0, favorite: false },
+                { name: "Service Level Agreement Draft.pdf", type: "pdf", size: "198 KB", modified: "02/05/2019 3:20 PM", comments: 1, favorite: false }
+            ]
+        },
+        "sales-orders": {
+            title: "08 - Sales Orders",
+            icon: "folder-purple",
+            items: [
+                { name: "SO-2019-00142 Meridian Industries.pdf", type: "pdf", size: "95 KB", modified: "06/20/2018 1:34 PM", comments: 0, favorite: false },
+                { name: "SO-2019-00156 Meridian Industries.pdf", type: "pdf", size: "102 KB", modified: "06/20/2018 1:34 PM", comments: 0, favorite: false },
+                { name: "SO-2019-00178 Meridian Industries.pdf", type: "pdf", size: "88 KB", modified: "06/20/2018 1:34 PM", comments: 1, favorite: false }
+            ]
+        },
+        "support-cases": {
+            title: "10 - Support Cases",
+            icon: "folder-orange",
+            items: [
+                { name: "Case-4410 Equipment malfunction report.pdf", type: "pdf", size: "210 KB", modified: "06/20/2018 1:34 PM", comments: 0, favorite: false },
+                { name: "Case-4522 Delivery delay escalation.eml", type: "email", size: "15 KB", modified: "06/20/2018 1:34 PM", comments: 1, favorite: false }
+            ]
+        },
+        "invoices": {
+            title: "11 - Invoices",
+            icon: "folder-orange",
+            items: [
+                { name: "INV-2019-0034 Meridian Industries.pdf", type: "pdf", size: "78 KB", modified: "02/12/2019 8:48 AM", comments: 1, favorite: false },
+                { name: "INV-2019-0029 Meridian Industries.pdf", type: "pdf", size: "82 KB", modified: "01/28/2019 2:15 PM", comments: 0, favorite: false }
+            ]
+        }
+    };
+
+    // Comments data
+    const commentsData = {
+        main: [
+            { author: "Wheeler, Nick", time: "3 minutes ago", text: "Please process asap, ship Friday!", initials: "NW" }
+        ],
+        "order-initiation": [
+            { author: "Wheeler, Nick", time: "3 minutes ago", text: "Please process asap, ship Friday!", initials: "NW" }
+        ]
+    };
+
+    let currentView = "root";
+    let navigationStack = [];
+
+    function getTypeIcon(type) {
+        switch(type) {
+            case "folder-orange":
+                return `<svg width="32" height="26" viewBox="0 0 32 26"><path d="M1 5C1 3.9 1.9 3 3 3H11L14 6H29C30.1 6 31 6.9 31 8V23C31 24.1 30.1 25 29 25H3C1.9 25 1 24.1 1 23V5Z" fill="#e8a027"/></svg>`;
+            case "folder-purple":
+                return `<svg width="32" height="26" viewBox="0 0 32 26"><path d="M1 5C1 3.9 1.9 3 3 3H11L14 6H29C30.1 6 31 6.9 31 8V23C31 24.1 30.1 25 29 25H3C1.9 25 1 24.1 1 23V5Z" fill="#7b5ea7"/></svg>`;
+            case "pdf":
+                return `<svg width="32" height="32" viewBox="0 0 32 32"><rect x="4" y="2" width="24" height="28" rx="2" fill="#fff" stroke="#d32f2f" stroke-width="1.5"/><rect x="4" y="2" width="24" height="8" fill="#d32f2f" rx="2"/><text x="16" y="9" text-anchor="middle" fill="#fff" font-size="6" font-weight="bold">PDF</text><line x1="9" y1="16" x2="23" y2="16" stroke="#ddd" stroke-width="1"/><line x1="9" y1="20" x2="23" y2="20" stroke="#ddd" stroke-width="1"/><line x1="9" y1="24" x2="18" y2="24" stroke="#ddd" stroke-width="1"/></svg>`;
+            case "email":
+                return `<svg width="32" height="32" viewBox="0 0 32 32"><rect x="3" y="6" width="26" height="20" rx="2" fill="#7b5ea7"/><polyline points="3,6 16,18 29,6" fill="none" stroke="#fff" stroke-width="1.5"/><line x1="3" y1="26" x2="12" y2="16" stroke="#fff" stroke-width="1" opacity="0.5"/><line x1="29" y1="26" x2="20" y2="16" stroke="#fff" stroke-width="1" opacity="0.5"/></svg>`;
+            case "excel":
+                return `<svg width="32" height="32" viewBox="0 0 32 32"><rect x="4" y="2" width="24" height="28" rx="2" fill="#fff" stroke="#217346" stroke-width="1.5"/><rect x="4" y="2" width="10" height="28" fill="#217346" rx="2"/><text x="9" y="18" text-anchor="middle" fill="#fff" font-size="8" font-weight="bold">X</text><line x1="17" y1="8" x2="26" y2="8" stroke="#217346" stroke-width="1"/><line x1="17" y1="13" x2="26" y2="13" stroke="#217346" stroke-width="1"/><line x1="17" y1="18" x2="26" y2="18" stroke="#217346" stroke-width="1"/><line x1="17" y1="23" x2="26" y2="23" stroke="#217346" stroke-width="1"/></svg>`;
+            case "word":
+                return `<svg width="32" height="32" viewBox="0 0 32 32"><rect x="4" y="2" width="24" height="28" rx="2" fill="#fff" stroke="#2b579a" stroke-width="1.5"/><rect x="4" y="2" width="10" height="28" fill="#2b579a" rx="2"/><text x="9" y="18" text-anchor="middle" fill="#fff" font-size="8" font-weight="bold">W</text><line x1="17" y1="8" x2="26" y2="8" stroke="#2b579a" stroke-width="1"/><line x1="17" y1="13" x2="26" y2="13" stroke="#2b579a" stroke-width="1"/><line x1="17" y1="18" x2="26" y2="18" stroke="#2b579a" stroke-width="1"/><line x1="17" y1="23" x2="26" y2="23" stroke="#2b579a" stroke-width="1"/></svg>`;
+            case "pptx":
+                return `<svg width="32" height="32" viewBox="0 0 32 32"><rect x="4" y="2" width="24" height="28" rx="2" fill="#fff" stroke="#d24726" stroke-width="1.5"/><rect x="4" y="2" width="10" height="28" fill="#d24726" rx="2"/><text x="9" y="18" text-anchor="middle" fill="#fff" font-size="8" font-weight="bold">P</text><line x1="17" y1="8" x2="26" y2="8" stroke="#d24726" stroke-width="1"/><line x1="17" y1="13" x2="26" y2="13" stroke="#d24726" stroke-width="1"/><line x1="17" y1="18" x2="26" y2="18" stroke="#d24726" stroke-width="1"/></svg>`;
+            default:
+                return `<svg width="32" height="32" viewBox="0 0 32 32"><rect x="4" y="2" width="24" height="28" rx="2" fill="#fff" stroke="#999" stroke-width="1.5"/></svg>`;
+        }
+    }
+
+    function isFolder(type) {
+        return type === "folder-orange" || type === "folder-purple";
+    }
+
+    function renderView(viewId) {
+        const data = workspaceData[viewId];
+        if (!data) return;
+
+        currentView = viewId;
+        document.getElementById("pageTitle").textContent = data.title;
+        document.getElementById("mainCommentBadge").textContent = viewId === "root" ? "1" : "";
+
+        // Show/hide back button
+        const backBtn = document.getElementById("backBtn");
+        if (viewId === "root") {
+            backBtn.classList.remove("visible");
+        } else {
+            backBtn.classList.add("visible");
+        }
+
+        // Render file list
+        const fileList = document.getElementById("fileList");
+        fileList.innerHTML = "";
+
+        data.items.forEach((item, index) => {
+            const row = document.createElement("li");
+            row.className = "file-row";
+            
+            const commentHtml = item.comments > 0 
+                ? `<div class="comment-icon" onclick="event.stopPropagation(); openComments('${viewId}')">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+                    ${item.comments}
+                   </div>`
+                : `<div class="comment-icon"></div>`;
+
+            row.innerHTML = `
+                <div><input type="checkbox" class="checkbox" onclick="event.stopPropagation()"></div>
+                <div class="type-icon">${getTypeIcon(item.type)}</div>
+                <div class="file-name">${item.name}</div>
+                <div class="size">${item.size}</div>
+                <div class="modified">${item.modified}</div>
+                ${commentHtml}
+                <div class="favorite-icon" onclick="event.stopPropagation(); toggleFavorite(this)">&#9734;</div>
+            `;
+
+            if (isFolder(item.type) && item.folderId) {
+                row.addEventListener("click", () => {
+                    navigateTo(item.folderId);
+                });
+                row.style.cursor = "pointer";
+            } else {
+                row.addEventListener("click", () => {
+                    // Simulate file click - highlight row
+                    row.style.background = "#e8f4fd";
+                    setTimeout(() => { row.style.background = ""; }, 800);
+                });
+            }
+
+            fileList.appendChild(row);
+        });
+
+        // Show footer for subfolders
+        const footer = document.getElementById("footer");
+        if (viewId !== "root") {
+            footer.style.display = "block";
+            footer.textContent = data.items.length + " Items";
+        } else {
+            footer.style.display = "none";
+        }
+    }
+
+    function navigateTo(folderId) {
+        navigationStack.push(currentView);
+        if (workspaceData[folderId]) {
+            renderView(folderId);
+        } else {
+            // Generic empty folder
+            const data = workspaceData.root.items.find(i => i.folderId === folderId);
+            if (data) {
+                document.getElementById("pageTitle").textContent = data.name;
+                document.getElementById("fileList").innerHTML = `<li style="padding: 40px; text-align: center; color: #999;">No items to display</li>`;
+                document.getElementById("backBtn").classList.add("visible");
+                document.getElementById("footer").style.display = "block";
+                document.getElementById("footer").textContent = "0 Items";
+                currentView = folderId;
+            }
+        }
+    }
+
+    function navigateBack() {
+        if (navigationStack.length > 0) {
+            const prevView = navigationStack.pop();
+            renderView(prevView);
+        }
+    }
+
+    function toggleFavorite(el) {
+        if (el.innerHTML === "★") {
+            el.innerHTML = "&#9734;";
+            el.style.color = "#ccc";
+        } else {
+            el.innerHTML = "★";
+            el.style.color = "#f5a623";
+        }
+    }
+
+    function openComments(context) {
+        const overlay = document.getElementById("commentsOverlay");
+        const body = document.getElementById("commentsBody");
+        overlay.style.display = "block";
+
+        // Load comments
+        const comments = commentsData[context] || commentsData["main"] || [];
+        body.innerHTML = "";
+
+        comments.forEach(c => {
+            const div = document.createElement("div");
+            div.className = "comment-item";
+            div.innerHTML = `
+                <div class="comment-avatar">${c.initials}</div>
+                <div class="comment-content">
+                    <div class="comment-meta">
+                        <span class="comment-author">${c.author}</span>
+                        <span class="comment-time">${c.time}</span>
+                        <div class="comment-actions-icons">
+                            <span style="cursor:pointer;" title="Edit">&#9998;</span>
+                            <span style="cursor:pointer;" title="Delete">&#128465;</span>
+                        </div>
+                    </div>
+                    <div class="comment-text">${c.text}</div>
+                    <div class="comment-links"><a href="#">Reply</a> | <a href="#">Attach file</a></div>
+                </div>
+            `;
+            body.appendChild(div);
+        });
+    }
+
+    function closeComments(event) {
+        if (event.target === document.getElementById("commentsOverlay")) {
+            closeCommentsPanel();
+        }
+    }
+
+    function closeCommentsPanel() {
+        document.getElementById("commentsOverlay").style.display = "none";
+    }
+
+    function postComment() {
+        const input = document.getElementById("commentInput");
+        const text = input.value.trim();
+        if (!text) return;
+
+        const body = document.getElementById("commentsBody");
+        const div = document.createElement("div");
+        div.className = "comment-item";
+        div.style.marginTop = "16px";
+        div.innerHTML = `
+            <div class="comment-avatar" style="background:#0070d2;">You</div>
+            <div class="comment-content">
+                <div class="comment-meta">
+                    <span class="comment-author">You</span>
+                    <span class="comment-time">Just now</span>
+                    <div class="comment-actions-icons">
+                        <span style="cursor:pointer;" title="Edit">&#9998;</span>
+                        <span style="cursor:pointer;" title="Delete">&#128465;</span>
+                    </div>
+                </div>
+                <div class="comment-text">${text}</div>
+                <div class="comment-links"><a href="#">Reply</a> | <a href="#">Attach file</a></div>
+            </div>
+        `;
+        body.appendChild(div);
+        input.value = "";
+    }
+
+    // Handle Enter key in comment input
+    document.addEventListener("DOMContentLoaded", () => {
+        document.getElementById("commentInput").addEventListener("keypress", (e) => {
+            if (e.key === "Enter") postComment();
+        });
+    });
+
+    // Initial render
+    renderView("root");
+</script>
+</body>
+</html>
